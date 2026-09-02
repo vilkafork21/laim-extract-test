@@ -1,0 +1,114 @@
+{
+  "id": "c2f824a8-6675-47bd-a0cc-7be382a6cb13",
+  "name": "LAIM Extract Profile — Test Window",
+  "description": "Заданные пользователем календарные границы текущего OOT test для одной пары агент × дистрибутив",
+  "fullDescription": "Начальная нода без входов. Формирует параметры test-периода по заданным оператором agent_id, точному distributive, включительным датам test_date_from/test_date_to и часовому поясу. Даты однозначно преобразуются в целочисленные наносекундные границы полуинтервала [ts_ns, te_ns). Защитные правила зафиксированы в коде: источник cdio_prod, отбор целых трейсов по окончанию внутри периода, обязательный агентский спан, отсутствие ограничения объёма, единый снимок (snapshot) и дочитывание трейса целиком. Query должен работать в роли monitoring, Gate — с минимумом 500 трейсов и без немедленного падения на red. После green оператор задаёт следующий непроверенный день. Если единственная причина red — менее 500 трейсов, оператор сохраняет test_date_from и увеличивает test_date_to на сутки.",
+  "shortNameToDisplay": "Test Window",
+  "shape": "data_source",
+  "ports": [
+    {
+      "in": false,
+      "name": "selection",
+      "label": "Параметры test-выборки",
+      "description": "Агент, дистрибутив, даты и точные ns-границы test для LAIM Extract Query",
+      "order": 1,
+      "type": "default"
+    }
+  ],
+  "script": {
+    "type": "python",
+    "baseImageKey": "py312-simple",
+    "deployType": "docker",
+    "runConfiguration": {
+      "sourceFiles": [
+        "main.py",
+        "laim_extract_profiles/__init__.py",
+        "laim_extract_profiles/profile_contract.py",
+        "laim_extract_profiles/test_window.py"
+      ],
+      "functionName": "main",
+      "functionParameters": [],
+      "output": {
+        "type": "json",
+        "output": []
+      }
+    }
+  },
+  "ui": {
+    "settings": [
+      {
+        "page": "Test",
+        "title": "Текущее test-окно",
+        "components": [
+          {
+            "type": "form",
+            "label": "Точная пара мониторинга",
+            "config": {
+              "components": [
+                {
+                  "parameter": "agent_id",
+                  "label": "CI/CE агента (обязательно)",
+                  "uiComponent": "input",
+                  "type": "string",
+                  "defaultValue": "",
+                  "placeholder": "CI09774440"
+                },
+                {
+                  "parameter": "distributive",
+                  "label": "Точный distributive (обязательно, без шаблонов)",
+                  "uiComponent": "input",
+                  "type": "string",
+                  "defaultValue": "",
+                  "placeholder": "Полное значение из витрины"
+                }
+              ]
+            }
+          },
+          {
+            "type": "form",
+            "label": "Текущий календарный период",
+            "config": {
+              "components": [
+                {
+                  "parameter": "test_date_from",
+                  "label": "Первый день test, включительно (ГГГГ-ММ-ДД)",
+                  "uiComponent": "input",
+                  "type": "string",
+                  "defaultValue": "",
+                  "placeholder": "2026-08-01"
+                },
+                {
+                  "parameter": "test_date_to",
+                  "label": "Последний день test, включительно (ГГГГ-ММ-ДД)",
+                  "uiComponent": "input",
+                  "type": "string",
+                  "defaultValue": "",
+                  "placeholder": "2026-08-01"
+                },
+                {
+                  "parameter": "tz",
+                  "label": "Часовой пояс границ периода",
+                  "uiComponent": "select",
+                  "type": "string",
+                  "allowedValues": [
+                    {
+                      "Москва (UTC+3)": "Europe/Moscow"
+                    },
+                    {
+                      "UTC": "UTC"
+                    }
+                  ],
+                  "defaultValue": "Europe/Moscow"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "result": {
+      "title": "Результат",
+      "components": []
+    }
+  }
+}
